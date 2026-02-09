@@ -37,7 +37,7 @@ void Function::setUpFunction() {
     domainOfTheFunction.reserve( static_cast<int>( (abs(firstDVal) + abs(lastDVal) ) / ARG_JUMP_VALUE ) +1);
     setOfValues.reserve( domainOfTheFunction.capacity() );
 
-    // THE APPEARANCE OF THE GRAPH:
+    // APPEARANCE OF THE GRAPH
     pen.setColor(lColor);
     pen.setWidth(pWidth);
     pen.setJoinStyle(Qt::RoundJoin);
@@ -97,5 +97,4 @@ void Function::drawFunction(QPainter *painter) {
     painter->setRenderHint(QPainter::Antialiasing, true);
     painter->setPen(pen);
     painter->drawPolyline(*this);
-
 }

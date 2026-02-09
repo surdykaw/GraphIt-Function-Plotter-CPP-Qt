@@ -37,5 +37,5 @@ public:
     double calcValue(std::string &FunctionFormula, double ArgVal);
     void setUpFunction();
     void setValues();
-    void drawFunction(QPainter *painter);
+    void drawFunction(QPainter* painter);
 };
