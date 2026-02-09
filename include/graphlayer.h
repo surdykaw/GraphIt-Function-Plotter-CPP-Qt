@@ -1,8 +1,7 @@
-//PLIK NAGLOWKOWY KLASY GraphLayer
 #pragma once
 
 #include <vector>
-#include <memory>
+//#include <memory>
 //
 #include "function.h"
 //

@@ -1,3 +1,7 @@
 .vs
-.pro
 build
+.qtc*
+.qmake*
+debug
+release
+Makefile*

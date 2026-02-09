@@ -11,9 +11,6 @@
 #include <qframe.h>
 #include <qscrollarea.h>
 #include <qlineedit.h>
-//
-#include <string.h>
-
 
 class Buttons;
 
@@ -43,13 +40,16 @@ private:
     QFont font = QFont("Verdana",12,300, false);
     QRegularExpression rexpr = QRegularExpression("(-?0?|-?[1-9]{1}[0-9]{0,2}){1}");
     QValidator *validator;
+    QTimer *editTimer;
+    QFrame *pendingFrame = nullptr;
+    void updateSingleFunction(QFrame* frame);
 
     //OTHERS
     bool firstResize = true;
 
 private slots:
     void onBnClick();
-    void onEditFinish();
+    //void onEditFinished();
 
 protected:
     virtual void resizeEvent(QResizeEvent *evt) override;
@@ -68,14 +68,17 @@ public:
 
 
 class Buttons : public QLabel {
+    Q_OBJECT
 private:
-    QMainWindow *mainWin;
+    MainWin* mainWin;
     bool state = true; // TRUE MEANS PLUS, FALSE MEANS MINUS
 protected:
-   void enterEvent(QEnterEvent *event) override {
+   void enterEvent(QEnterEvent* event) override {
+        Q_UNUSED(event);
         setCursor(Qt::PointingHandCursor);
     }
-   void mousePressEvent(QMouseEvent *event) override {
+   void mousePressEvent(QMouseEvent* event) override {
+        Q_UNUSED(event);
         QMetaObject::invokeMethod(mainWin, "addDelBnClicked", Qt::DirectConnection, Q_ARG(Buttons*, this));
     }
 
@@ -87,8 +90,6 @@ public:
             state = true;
        return state;
     }
-    Buttons(QWidget *parent) : QLabel(parent) {
-        mainWin = static_cast<QMainWindow *>(this->parent()->parent()->parent()->parent()->parent());
-    }
+    Buttons(MainWin* mainWin, QWidget *parent = nullptr) : QLabel(parent), mainWin(mainWin) {}
 };
 

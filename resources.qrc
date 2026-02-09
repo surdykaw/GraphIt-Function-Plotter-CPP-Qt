@@ -1,0 +1,12 @@
+<RCC>
+    <qresource prefix="/">
+        <file>resources/arrowUp.png</file>
+        <file>resources/arrowDown.png</file>
+        <file>resources/mainAxisArrUp.png</file>
+        <file>resources/mainAxisArrRight.png</file>
+        <file>resources/minusRounded.png</file>
+        <file>resources/minusRounded_40.png</file>
+        <file>resources/plusCircle.png</file>
+        <file>resources/plusCircle_40.png</file>
+    </qresource>
+</RCC>
