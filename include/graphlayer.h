@@ -9,6 +9,8 @@
 #include <QMainWindow>
 #include <QMouseEvent>
 #include <QLabel>
+#include <QRect>
+#include <QString>
 
 extern const int GRAPH_LAYER_WIDTH;
 extern const int GRAPH_LAYER_HEIGHT;
@@ -27,10 +29,11 @@ private:
     // LAYER PROPERTIES
     bool leftBnClicked = false;
     QSize centralWdtSize;
-    QPainter painter;    // MAIN PAINTER
     QPalette pal4GraphLayer;
     QPen axisPen, p1, p2;
     QFont font4Values;
+    QFont axisLabelFont;
+    QFontMetrics* axisFontMetrics;
     QPointF curMousePos, newMousePos;
     QPoint curGraphLyrPos, newGraphLyrPos;
 
@@ -42,9 +45,18 @@ private:
     // CONTAINERS OF ELEMENTS
     std::vector<QLine> ver;   // VERTICAL AXIS
     std::vector<QLine> hor;   // HORIZONTAL AXIS
-    std::vector<QLabel *> vValues;  // VALUES FOR X AXIS
-    std::vector<QLabel *> hValues;  // VALUES FOR Y AXIS
 
+    struct AxisLabelData {
+        QRect rect;
+        QString text;
+    };
+    std::vector<AxisLabelData> vLabelData;
+    std::vector<AxisLabelData> hLabelData;
+    void drawAxisLabelBubbles(QPainter& painter, const std::vector<AxisLabelData>& labels, const QFontMetrics& fm);
+    QLabel xAxisLabel;
+    QLabel yAxisLabel;
+    void updateAxisNamePositions();
+    // FUNCTIONS CONTAINER
     std::vector<Function *> functions;
 
 protected:
@@ -59,11 +71,10 @@ public:
     //
     Function* addFunction(std::string &Formula, int D1, int D2, QColor &Color);
     void delFunction(Function* fun);
-    void setAxisArrow(QLabel *label, const bool rightArrow);
+    //void setAxisArrow(QLabel *label, const bool rightArrow);
     void setAxisValue(QLabel *label, int linePos, int xValue, int yValue);
     void updateRArrowPos(QResizeEvent *event);
-    void createAxis(QWidget *graphLayerPtr);
+    void createAxis();
     void drawAxis(QPainter &painter, const QPen &pen);
     void setupGraphLyr(QWidget *graphLayer);
 };
-

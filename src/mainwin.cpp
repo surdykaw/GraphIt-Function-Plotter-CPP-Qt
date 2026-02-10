@@ -12,6 +12,9 @@ const int MAIN_WIN_HEIGHT = 600;
 
 MainWin::MainWin(QWidget* Parent): QMainWindow(Parent) {
     setupMainWin(this);
+    addDelButtons.reserve(10);
+    inputArea.reserve(10);
+    funPtrs.reserve(10);
 }
 
 MainWin::~MainWin() {
@@ -33,7 +36,7 @@ void MainWin::setupMainWin(QMainWindow* MainWinPointer) {
     centralwidget->setGeometry(0,0,MAIN_WIN_WIDTH, MAIN_WIN_HEIGHT);
 
     // GRAPH LAYER
-    graphLrPtr = new GraphLayer(centralwidget);
+    graphLayerPtr = new GraphLayer(centralwidget);
 
     optionPanelButton.setParent(centralwidget);
     optionPanelButton.setIcon(QIcon(":/resources/arrowDown.png"));
@@ -69,7 +72,7 @@ void MainWin::setupMainWin(QMainWindow* MainWinPointer) {
 
     validator = new QRegularExpressionValidator(rexpr,this);
 
-    fieldsCount = 1;
+    rowCount = 1;
     setCentralWidget(centralwidget);
     editTimer = new QTimer(this);
     editTimer->setSingleShot(true);
@@ -81,7 +84,7 @@ void MainWin::setupMainWin(QMainWindow* MainWinPointer) {
 }
 
 void MainWin::setupInputArea(QFrame* frame) {
-    frame->setGeometry(45, (fieldsCount-1)*40 + (fieldsCount-1)*5, 437, 40);
+    frame->setGeometry(45, (rowCount-1)*40 + (rowCount-1)*5, 437, 40);
     frame->setFrameShape(QFrame::NoFrame);
     QLineEdit *input = new QLineEdit(frame);
     QLineEdit *d1 = new QLineEdit(frame);
@@ -103,7 +106,7 @@ void MainWin::setupInputArea(QFrame* frame) {
     d2->setPlaceholderText("1");
     d1->setValidator(validator);
     d2->setValidator(validator);
-    //connect(input, &QLineEdit::editingFinished, this, &MainWin::onEditFinished);
+
     connect(input, &QLineEdit::textChanged, this, [this, frame]() {
         pendingFrame = frame;
         editTimer->start(400);
@@ -126,32 +129,31 @@ void MainWin::setupInputArea(QFrame* frame) {
     frame->show();
 }
 
-
 void MainWin::addDelBnClicked(Buttons* ptr) {
    for (Buttons* wsk : addDelButtons) {
        if ( wsk == ptr ) {
            if ( !ptr->changeState() ) { // "PLUS" BUTTON CLICKED
-               if (fieldsCount == 1) {
+               if (rowCount == 1) {
                    addDelButtons.back()->setPixmap(minusPixmap);
                    addDelButtons.front()->show();
-                   inputsArea.setGeometry(0,0,480, (fieldsCount+1)*40 + (fieldsCount+1)*5);
+                   inputsArea.setGeometry(0,0,480, (rowCount+1)*40 + (rowCount+1)*5);
                    addDelButtons.emplace_back(new Buttons(this, &inputsArea));
-                   addDelButtons.back()->setGeometry(0, (fieldsCount*40 + fieldsCount*5) ,40,40);
+                   addDelButtons.back()->setGeometry(0, (rowCount*40 + rowCount*5), 40, 40);
                    addDelButtons.back()->setPixmap(plusPixmap);
                    inputArea.emplace_back(new QFrame(&inputsArea));
                    setupInputArea(inputArea.back());
                    addDelButtons.back()->show();
-                   fieldsCount++; 
+                   rowCount++;
                } else {
-                   inputsArea.setGeometry(0,0,480, (fieldsCount+1)*40 + (fieldsCount+1)*5);
+                   inputsArea.setGeometry(0,0,480, (rowCount+1)*40 + (rowCount+1)*5);
                    addDelButtons.back()->setPixmap(minusPixmap);
                    addDelButtons.emplace_back(new Buttons(this, &inputsArea));
-                   addDelButtons.back()->setGeometry(0, (fieldsCount*40 + fieldsCount*5) ,40,40);
+                   addDelButtons.back()->setGeometry(0, (rowCount*40 + rowCount*5), 40, 40);
                    addDelButtons.back()->setPixmap(plusPixmap);
                    inputArea.emplace_back(new QFrame(&inputsArea));
                    setupInputArea(inputArea.back());
                    addDelButtons.back()->show();
-                   fieldsCount++;
+                   rowCount++;
                  }
             } else {  //    "MINUS" BUTTON CLICKED
                   for (int i = 0; i < static_cast<int>(addDelButtons.size()); i++) {
@@ -160,14 +162,14 @@ void MainWin::addDelBnClicked(Buttons* ptr) {
                           addDelButtons.erase(addDelButtons.begin() + i);
 
                           if (i < static_cast<int>(funPtrs.size())) {
-                              graphLrPtr->delFunction(funPtrs.at(i));
+                              graphLayerPtr->delFunction(funPtrs.at(i));
                               funPtrs.erase(funPtrs.begin() + i);
                           }
 
                           delete inputArea.at(i);
                           inputArea.erase(inputArea.begin() + i);
-                          --fieldsCount;
-                          inputsArea.setGeometry(0, 0, 480, (fieldsCount) * 40 + (fieldsCount) * 5);
+                          --rowCount;
+                          inputsArea.setGeometry(0, 0, 480, (rowCount) * 40 + (rowCount) * 5);
                           break;
                       }
                   }
@@ -191,7 +193,7 @@ void MainWin::resizeEvent(QResizeEvent* evt) {
     optionPanel.setGeometry(mainWinPtr->width()/2 - 250, mainWinPtr->height()-250, 500, 250);
     if (!optionPanel.isVisible() && !firstResize) optionPanelButton.setGeometry(mainWinPtr->width()/2-40, mainWinPtr->height()-28, 80, 30);
     else optionPanelButton.setGeometry(mainWinPtr->width()/2-40, mainWinPtr->height()-278, 80, 30);
-    if (!firstResize) graphLrPtr->updateRArrowPos(evt);
+    if (!firstResize) graphLayerPtr->updateRArrowPos(evt);
     firstResize = false;
 
 }
@@ -214,12 +216,12 @@ void MainWin::updateSingleFunction(QFrame* frame)
     int index = std::distance(inputArea.begin(), std::find(inputArea.begin(), inputArea.end(), frame));
     if (index < 0) return;
 
-    QObjectList lista = frame->children();
+    QObjectList functionDetails = frame->children();
 
-    QLineEdit* input = qobject_cast<QLineEdit* >(lista[0]);
-    QLineEdit* d1    = qobject_cast<QLineEdit* >(lista[1]);
-    QLineEdit* d2    = qobject_cast<QLineEdit* >(lista[2]);
-    QComboBox* colors= qobject_cast<QComboBox* >(lista[3]);
+    QLineEdit* input = qobject_cast<QLineEdit* >(functionDetails[0]);
+    QLineEdit* d1    = qobject_cast<QLineEdit* >(functionDetails[1]);
+    QLineEdit* d2    = qobject_cast<QLineEdit* >(functionDetails[2]);
+    QComboBox* colors= qobject_cast<QComboBox* >(functionDetails[3]);
 
     std::string formula = input->text().toStdString();
     int first = d1->text().toInt();
@@ -244,94 +246,21 @@ void MainWin::updateSingleFunction(QFrame* frame)
     try {
         if (valid) {
             if (index < static_cast<int>(funPtrs.size())) {
-                graphLrPtr->delFunction(funPtrs[index]);
-                funPtrs[index] = graphLrPtr->addFunction(formula, first, last, color);
+                graphLayerPtr->delFunction(funPtrs[index]);
+                funPtrs[index] = graphLayerPtr->addFunction(formula, first, last, color);
             } else {
-                funPtrs.emplace_back(graphLrPtr->addFunction(formula, first, last, color));
+                funPtrs.emplace_back(graphLayerPtr->addFunction(formula, first, last, color));
             }
         } else {
             if (index < static_cast<int>(funPtrs.size())) {
-                graphLrPtr->delFunction(funPtrs[index]);
+                graphLayerPtr->delFunction(funPtrs[index]);
                 funPtrs.erase(funPtrs.begin() + index);
             }
         }
     } catch (...) {
         if (index < static_cast<int>(funPtrs.size())) {
-            graphLrPtr->delFunction(funPtrs[index]);
+            graphLayerPtr->delFunction(funPtrs[index]);
             funPtrs.erase(funPtrs.begin() + index);
-        }
-    }
-}
-
-/*
-void MainWin::onEditFinished() {
-    int iter = 0;
-    QObjectList functionDetails;
-    if (funPtrs.size() > 0) {
-        for (QFrame* ptr : inputArea) {
-            functionDetails = ptr->children();
-            setFunctionValues(qobject_cast<QLineEdit* >(functionDetails[0]),
-                              qobject_cast<QLineEdit* >(functionDetails[1]),
-                              qobject_cast<QLineEdit* >(functionDetails[2]),
-                              qobject_cast<QComboBox* >(functionDetails[3]));
-
-                if (firstDValue < lastDValue) {
-                    if (funPtrs.size() == inputArea.size()) {
-                        graphLrPtr->delFunction(funPtrs.at(iter));
-                        Function* ptr = graphLrPtr->addFunction(formula, firstDValue, lastDValue, color);
-                        funPtrs.at(iter) = ptr;
-                    } else {
-                        Function* ptr = graphLrPtr->addFunction(formula, firstDValue, lastDValue, color);
-                        funPtrs.emplace_back(ptr);
-                    }
-                }
-            iter++;
-         }
-    } else {
-        functionDetails = inputArea.at(0)->children();
-        setFunctionValues(qobject_cast<QLineEdit* >(functionDetails[0]),
-                          qobject_cast<QLineEdit* >(functionDetails[1]),
-                          qobject_cast<QLineEdit* >(functionDetails[2]),
-                          qobject_cast<QComboBox* >(functionDetails[3]));
-            if (firstDValue < lastDValue) {
-                Function* ptr = graphLrPtr->addFunction(formula, firstDValue, lastDValue, color);
-                funPtrs.emplace_back(ptr);
-            }
-        }
-}
-*/
-
-void MainWin::setFunctionValues(QLineEdit* Input, QLineEdit* D1, QLineEdit* D2, QComboBox* Colors) {
-    if(Input->hasFocus() || D1->hasFocus() || D2->hasFocus()) {
-        formula = (Input->text()).toStdString();
-        firstDValue = (D1->text()).toInt();
-        lastDValue = (D2->text()).toInt();
-        formula.erase(std::remove_if(formula.begin(), formula.end(), std::bind(std::isspace <char> ,
-                    std::placeholders::_1,
-                    std::locale::classic())),
-                    formula.end());
-        switch (Colors->currentIndex()) {
-        case 0:
-            color.setRgb(0,0,0,255);
-            break;
-        case 1:
-            color.setRgb(255,0,0,255);
-            break;
-        case 2:
-            color.setRgb(0,0,255,255);
-            break;
-        case 3:
-            color.setRgb(255,255,0,255);
-            break;
-        case 4:
-            color.setRgb(0,255,0,255);
-            break;
-        case 5:
-            color.setRgb(128,0,128,255);
-            break;
-        default:
-            color.setRgb(0,0,0,255);
-            break;
         }
     }
 }

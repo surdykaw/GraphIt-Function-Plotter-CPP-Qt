@@ -20,12 +20,9 @@ private:
     // POINTERS
     QMainWindow *mainWinPtr;
     QWidget *centralwidget;
-    GraphLayer *graphLrPtr;
+    GraphLayer *graphLayerPtr;
 
     // FUNCTION PROPERTIES
-    std::string formula;
-    QColor color;
-    int firstDValue, lastDValue;
     std::vector<Function *> funPtrs;
 
     // INPUT PANEL
@@ -35,7 +32,7 @@ private:
     QPixmap plusPixmap, minusPixmap;
     std::vector<Buttons *> addDelButtons;
     std::vector<QFrame *> inputArea;
-    int fieldsCount;
+    int rowCount;
     QPushButton optionPanelButton;
     QFont font = QFont("Verdana",12,300, false);
     QRegularExpression rexpr = QRegularExpression("(-?0?|-?[1-9]{1}[0-9]{0,2}){1}");
@@ -49,7 +46,6 @@ private:
 
 private slots:
     void onBnClick();
-    //void onEditFinished();
 
 protected:
     virtual void resizeEvent(QResizeEvent *evt) override;
@@ -63,7 +59,6 @@ public:
     //
     void setupMainWin(QMainWindow *mWinPtr);
     void setupInputArea(QFrame *frame);
-    void setFunctionValues(QLineEdit *Input, QLineEdit *D1, QLineEdit *D2, QComboBox *Colors);
 };
 
 
