@@ -1,7 +1,6 @@
 #pragma once
 
 #include <vector>
-//#include <memory>
 //
 #include "function.h"
 //
@@ -16,35 +15,35 @@ extern const int GRAPH_LAYER_WIDTH;
 extern const int GRAPH_LAYER_HEIGHT;
 extern const int INTERSPACE;
 
-
 class GraphLayer: public QWidget {
-    //Q_OBJECT
-
+    // GraphLayer implements a camera-over-plane rendering model
+    // The coordinate system is fixed and very large
+    // User navigates by moving the layer instead of scaling the graph
 private:
-    //POINTERS
-    QWidget *mainWinPtr = nullptr;
-    QWidget *centralWdtPtr = nullptr;
-    QWidget *graphPtr = nullptr;
+    // POINTERS
+    QWidget* mainWinPtr = nullptr;
+    QWidget* centralWidgetPtr = nullptr;
+    QWidget* graphPtr = nullptr;
 
     // LAYER PROPERTIES
     bool leftBnClicked = false;
-    QSize centralWdtSize;
+    QSize centralWidgetSize;
     QPalette pal4GraphLayer;
     QPen axisPen, p1, p2;
     QFont font4Values;
     QFont axisLabelFont;
-    QFontMetrics* axisFontMetrics;
+    QFontMetrics axisFontMetrics{QFont()};
     QPointF curMousePos, newMousePos;
-    QPoint curGraphLyrPos, newGraphLyrPos;
+    QPoint graphLayerPos, newGraphLayerPos;
 
     // OTHER ELEMENTS
     QPixmap rightPixArr, upPixArr;
     QLabel rArrow, upArrow;
     int curRArrowXPos, curUpArrowYPos;
 
-    // CONTAINERS OF ELEMENTS
-    std::vector<QLine> ver;   // VERTICAL AXIS
-    std::vector<QLine> hor;   // HORIZONTAL AXIS
+    // AXIS GRID
+    std::vector<QLine> verticalLines;   // VERTICAL AXES
+    std::vector<QLine> horizontalLines;   // HORIZONTAL AXES
 
     struct AxisLabelData {
         QRect rect;
@@ -56,25 +55,24 @@ private:
     QLabel xAxisLabel;
     QLabel yAxisLabel;
     void updateAxisNamePositions();
-    // FUNCTIONS CONTAINER
+    // FUNCTIONS OBJECTS (OWNED)
     std::vector<Function *> functions;
 
 protected:
-    void mousePressEvent(QMouseEvent *event) override;
-    void mouseMoveEvent(QMouseEvent *event) override;
-    void mouseReleaseEvent(QMouseEvent *event) override;
-    void paintEvent(QPaintEvent *event) override;
+    void mousePressEvent(QMouseEvent* event) override;
+    void mouseMoveEvent(QMouseEvent* event) override;
+    void mouseReleaseEvent(QMouseEvent* event) override;
+    void paintEvent(QPaintEvent* event) override;
 
 public:
-    GraphLayer(QWidget *parent);
+    GraphLayer(QWidget* parent);
     ~GraphLayer();
     //
-    Function* addFunction(std::string &Formula, int D1, int D2, QColor &Color);
+    Function* addFunction(const std::string& formula, int firstDomainValue, int lastDomainValue, const QColor& color);
     void delFunction(Function* fun);
-    //void setAxisArrow(QLabel *label, const bool rightArrow);
-    void setAxisValue(QLabel *label, int linePos, int xValue, int yValue);
-    void updateRArrowPos(QResizeEvent *event);
+    void setAxisValue(QLabel* label, int linePos, int xValue, int yValue);
+    void updateRArrowPos(QResizeEvent* event);
     void createAxis();
-    void drawAxis(QPainter &painter, const QPen &pen);
-    void setupGraphLyr(QWidget *graphLayer);
+    void drawAxis(QPainter& painter, QPen& pen);
+    void setupGraphLayer(QWidget* graphLayer);
 };

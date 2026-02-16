@@ -2,7 +2,7 @@
 
 #include "graphlayer.h"
 //
-#include "qregularexpression.h"
+#include <qregularexpression.h>
 #include <qvalidator.h>
 #include <qmainwindow.h>
 #include <qpainter.h>
@@ -15,12 +15,12 @@
 class Buttons;
 
 class MainWin : public QMainWindow {
-   Q_OBJECT
+    Q_OBJECT
 private:
     // POINTERS
-    QMainWindow *mainWinPtr;
-    QWidget *centralwidget;
-    GraphLayer *graphLayerPtr;
+    QMainWindow* mainWin;
+    QWidget* centralWidget;
+    GraphLayer* graphLayer;
 
     // FUNCTION PROPERTIES
     std::vector<Function *> funPtrs;
@@ -36,9 +36,9 @@ private:
     QPushButton optionPanelButton;
     QFont font = QFont("Verdana",12,300, false);
     QRegularExpression rexpr = QRegularExpression("(-?0?|-?[1-9]{1}[0-9]{0,2}){1}");
-    QValidator *validator;
-    QTimer *editTimer;
-    QFrame *pendingFrame = nullptr;
+    QValidator* validator;
+    QTimer* editTimer;
+    QFrame* pendingFrame = nullptr;
     void updateSingleFunction(QFrame* frame);
 
     //OTHERS
@@ -48,17 +48,17 @@ private slots:
     void onBnClick();
 
 protected:
-    virtual void resizeEvent(QResizeEvent *evt) override;
+    virtual void resizeEvent(QResizeEvent* event) override;
 
 public:
-    MainWin(QWidget *parent = nullptr);
+    MainWin(QWidget* parent = nullptr);
     ~MainWin();
 
     Q_INVOKABLE
-    void addDelBnClicked(Buttons *ptr);
+        void addDelBnClicked(Buttons* btnClicked);
     //
-    void setupMainWin(QMainWindow *mWinPtr);
-    void setupInputArea(QFrame *frame);
+    void setupMainWin(QMainWindow* mainWindow);
+    void setupInputArea(QFrame* frame);
 };
 
 
@@ -68,11 +68,11 @@ private:
     MainWin* mainWin;
     bool state = true; // TRUE MEANS PLUS, FALSE MEANS MINUS
 protected:
-   void enterEvent(QEnterEvent* event) override {
+    void enterEvent(QEnterEvent* event) override {
         Q_UNUSED(event);
         setCursor(Qt::PointingHandCursor);
     }
-   void mousePressEvent(QMouseEvent* event) override {
+    void mousePressEvent(QMouseEvent* event) override {
         Q_UNUSED(event);
         QMetaObject::invokeMethod(mainWin, "addDelBnClicked", Qt::DirectConnection, Q_ARG(Buttons*, this));
     }
@@ -83,8 +83,8 @@ public:
             state = false;
         else
             state = true;
-       return state;
+        return state;
     }
-    Buttons(MainWin* mainWin, QWidget *parent = nullptr) : QLabel(parent), mainWin(mainWin) {}
+    Buttons(MainWin* mainWin, QWidget* parent = nullptr) : QLabel(parent), mainWin(mainWin) {}
 };
 

@@ -5,26 +5,33 @@
 #include <qcolor.h>
 #include <qpixmap.h>
 
-//#include <QDebug>
+// Virtual infinite plane size
+// The graph is not zoomed — the user moves inside a very large coordinate space
+// Window acts as a camera over this surface
+const int GRAPH_LAYER_WIDTH = 20001;
+const int GRAPH_LAYER_HEIGHT = 20001;
+const int INTERSPACE = 64;  // Grid scale: pixels per one mathematical unit.
+// Controls grid density and function scaling (future zoom factor).
 
-const int GRAPH_LAYER_WIDTH = 20001;   // PREDEFINED VALUES USED TO CALCULATE
-const int GRAPH_LAYER_HEIGHT = 20001;  // SIZES OF WINDOW LAYERS
-const int INTERSPACE = 64;
+constexpr int AXIS_ARROW_SIZE = 20;
+constexpr int AXIS_LABEL_BOX = 40;
+constexpr int AXIS_HALF = 10;
+constexpr int AXIS_OFFSET = 6;
 
 GraphLayer::GraphLayer(QWidget* parent): QWidget(parent) {
-    centralWdtPtr = parent;
-    setupGraphLyr(this);
+    centralWidgetPtr = parent;
+    setupGraphLayer(this);
 }
 
 GraphLayer::~GraphLayer() {
     if (functions.size() > 0)
         for (Function* pointer : functions)
             delete pointer;
-    delete axisFontMetrics;
+    functions.clear();
 }
 
-Function* GraphLayer::addFunction(std::string &Formula, int D1, int D2, QColor &Color) {
-    Function* ptr = new Function(this, Formula, D1, D2, 3, Color);
+Function* GraphLayer::addFunction(const std::string& formula, int firstDomainValue, int lastDomainValue, const QColor& color) {
+    Function* ptr = new Function(this, formula, firstDomainValue, lastDomainValue, 3, color);
     functions.emplace_back(ptr);
     update();
     return ptr;
@@ -42,12 +49,12 @@ void GraphLayer::delFunction(Function* fun) {
     update();
 }
 
-void GraphLayer::setupGraphLyr(QWidget* graphLayer) {
+void GraphLayer::setupGraphLayer(QWidget* graphLayer) {
     graphPtr = graphLayer;
-    centralWdtSize = centralWdtPtr->size();
-    graphLayer->setGeometry(-GRAPH_LAYER_WIDTH/2 + centralWdtSize.width()/2, -GRAPH_LAYER_HEIGHT/2 + centralWdtSize.height()/2, GRAPH_LAYER_WIDTH, GRAPH_LAYER_HEIGHT);
-    curGraphLyrPos = QPoint(-GRAPH_LAYER_WIDTH/2 + centralWdtSize.width()/2, -GRAPH_LAYER_HEIGHT/2 + centralWdtSize.height()/2);
-    mainWinPtr = centralWdtPtr->parentWidget();
+    centralWidgetSize = centralWidgetPtr->size();
+    graphLayer->setGeometry(-GRAPH_LAYER_WIDTH/2 + centralWidgetSize.width()/2, -GRAPH_LAYER_HEIGHT/2 + centralWidgetSize.height()/2, GRAPH_LAYER_WIDTH, GRAPH_LAYER_HEIGHT);
+    graphLayerPos = QPoint(-GRAPH_LAYER_WIDTH/2 + centralWidgetSize.width()/2, -GRAPH_LAYER_HEIGHT/2 + centralWidgetSize.height()/2);
+    mainWinPtr = centralWidgetPtr->parentWidget();
 
     // APPEARANCE AND USABILITY
     setUpdatesEnabled(true);
@@ -61,8 +68,8 @@ void GraphLayer::setupGraphLyr(QWidget* graphLayer) {
     p2.setColor(QColor(0,0,128,255));
 
     // AXES AND THEIR VALUES
-    ver.reserve( int(GRAPH_LAYER_WIDTH/INTERSPACE) );
-    hor.reserve( int(GRAPH_LAYER_HEIGHT/INTERSPACE) );
+    verticalLines.reserve( int(GRAPH_LAYER_WIDTH/INTERSPACE) );
+    horizontalLines.reserve( int(GRAPH_LAYER_HEIGHT/INTERSPACE) );
     createAxis();
 
     // AXES ARROWS
@@ -79,7 +86,7 @@ void GraphLayer::setupGraphLyr(QWidget* graphLayer) {
     curRArrowXPos = GRAPH_LAYER_WIDTH/2 + mainWinPtr->width()/2 - 18;
     curUpArrowYPos = GRAPH_LAYER_HEIGHT/2 - mainWinPtr->height()/2;
 
-    // AXIS NAMES
+    // AXES NAMES
     xAxisLabel.setParent(graphLayer);
     yAxisLabel.setParent(graphLayer);
     xAxisLabel.setText("X");
@@ -99,18 +106,18 @@ void GraphLayer::createAxis() {
     font4Values.setPixelSize(15);
     axisLabelFont = font4Values;
     axisLabelFont.setBold(true);
-    axisFontMetrics = new QFontMetrics(axisLabelFont);
+    axisFontMetrics = QFontMetrics(axisLabelFont);
 
     int val = -(GRAPH_LAYER_WIDTH / INTERSPACE) / 2;
 
     // VERTICAL LINES + X axis values
     for (int i = (GRAPH_LAYER_WIDTH/2) % INTERSPACE; i <= GRAPH_LAYER_WIDTH; i += INTERSPACE) {
 
-        ver.emplace_back(QLine(i, 0, i, GRAPH_LAYER_HEIGHT));
+        verticalLines.emplace_back(QLine(i, 0, i, GRAPH_LAYER_HEIGHT));
         if (i != GRAPH_LAYER_WIDTH/2) {
             AxisLabelData data;
             data.text = QString::number(val);
-            data.rect = QRect(i - 20, GRAPH_LAYER_HEIGHT/2 - 10, 40, 20);
+            data.rect = QRect(i - AXIS_ARROW_SIZE, GRAPH_LAYER_HEIGHT/2 - AXIS_HALF, AXIS_LABEL_BOX, AXIS_ARROW_SIZE);
             vLabelData.push_back(data);
         }
         val++;
@@ -121,21 +128,21 @@ void GraphLayer::createAxis() {
     // HORIZONTAL LINES + Y axis values
     for (int i = (GRAPH_LAYER_HEIGHT/2) % INTERSPACE; i <= GRAPH_LAYER_HEIGHT; i += INTERSPACE) {
 
-        hor.emplace_back(QLine(0, i, GRAPH_LAYER_WIDTH, i));
+        horizontalLines.emplace_back(QLine(0, i, GRAPH_LAYER_WIDTH, i));
 
         if (i != GRAPH_LAYER_HEIGHT/2) {
             AxisLabelData data;
             data.text = QString::number(val);
-            data.rect = QRect(GRAPH_LAYER_WIDTH/2 - 20, i - 10, 40, 20);
+            data.rect = QRect(GRAPH_LAYER_WIDTH/2 - AXIS_ARROW_SIZE, i - AXIS_HALF, AXIS_LABEL_BOX, AXIS_ARROW_SIZE);
             hLabelData.push_back(data);
         }
         val--;
     }
 }
 
-void GraphLayer::drawAxis(QPainter &painter, const QPen &pen) {
+void GraphLayer::drawAxis(QPainter& painter, QPen& pen) {
     // VERTICAL AXIS
-    for(QLine vLine : ver) {
+    for(const QLine& vLine : verticalLines) {
         if(vLine.x1() == GRAPH_LAYER_WIDTH/2) { // X = 0
             axisPen = painter.pen();
             painter.setPen(pen);
@@ -146,7 +153,7 @@ void GraphLayer::drawAxis(QPainter &painter, const QPen &pen) {
             painter.drawLine(vLine);
     }
     // HORIZONTAL AXIS
-    for(QLine hLine : hor) {
+    for(const QLine& hLine : horizontalLines) {
         if(hLine.y1() == GRAPH_LAYER_HEIGHT/2) { // Y = 0
             axisPen = painter.pen();
             painter.setPen(pen);
@@ -164,7 +171,7 @@ void GraphLayer::drawAxisLabelBubbles(QPainter& painter, const std::vector<AxisL
 
     for (const auto& lbl : labels) {
         QRect textSize = fm.boundingRect(lbl.text);
-        int size = std::max(textSize.width(), textSize.height()) + 6;
+        int size = std::max(textSize.width(), textSize.height()) + AXIS_OFFSET;
         QRect bgRect(lbl.rect.center().x() - size/2, lbl.rect.center().y() - size/2, size, size);
         painter.drawEllipse(bgRect);
         painter.setPen(Qt::black);
@@ -191,20 +198,20 @@ void GraphLayer::paintEvent(QPaintEvent* event) {
     painter.setOpacity(0.9);
 
     // ARROWS
-    rArrow.setGeometry(curRArrowXPos, GRAPH_LAYER_HEIGHT/2 -10, 20, 20);
-    upArrow.setGeometry(GRAPH_LAYER_WIDTH/2 -10, curUpArrowYPos, 20, 20);
+    rArrow.setGeometry(curRArrowXPos, GRAPH_LAYER_HEIGHT/2 -AXIS_HALF, AXIS_ARROW_SIZE, AXIS_ARROW_SIZE);
+    upArrow.setGeometry(GRAPH_LAYER_WIDTH/2 -AXIS_HALF, curUpArrowYPos, AXIS_ARROW_SIZE, AXIS_ARROW_SIZE);
 
     updateAxisNamePositions();
 
     // AXES
     drawAxis(painter, p2);
 
-    // WARTOŚCI OSI
+    // AXES VALUES
     painter.setFont(axisLabelFont);
-    drawAxisLabelBubbles(painter, vLabelData, *axisFontMetrics);
-    drawAxisLabelBubbles(painter, hLabelData, *axisFontMetrics);
+    drawAxisLabelBubbles(painter, vLabelData, axisFontMetrics);
+    drawAxisLabelBubbles(painter, hLabelData, axisFontMetrics);
 
-    // FUNKCJE
+    // PLOTS
     for (Function* fun : functions)
         fun->drawFunction(&painter);
 }
@@ -212,11 +219,11 @@ void GraphLayer::paintEvent(QPaintEvent* event) {
 void GraphLayer::updateRArrowPos(QResizeEvent* event) {
     if (event->size().width() - event->oldSize().width() < 0) {
         curRArrowXPos = curRArrowXPos - abs(event->size().width() - event->oldSize().width());
-        rArrow.setGeometry(curRArrowXPos, GRAPH_LAYER_HEIGHT/2 -10,20,20);
+        rArrow.setGeometry(curRArrowXPos, GRAPH_LAYER_HEIGHT/2 -AXIS_HALF, AXIS_ARROW_SIZE, AXIS_ARROW_SIZE);
     }
     else if (event->size().width() - event->oldSize().width() > 0) {
         curRArrowXPos = curRArrowXPos + abs(event->size().width() - event->oldSize().width());
-        rArrow.setGeometry(curRArrowXPos, GRAPH_LAYER_HEIGHT/2 -10,20,20);
+        rArrow.setGeometry(curRArrowXPos, GRAPH_LAYER_HEIGHT/2 -AXIS_HALF, AXIS_ARROW_SIZE, AXIS_ARROW_SIZE);
     }
     updateAxisNamePositions();
 }
@@ -232,21 +239,21 @@ void GraphLayer::mousePressEvent(QMouseEvent* event) {
 void GraphLayer::mouseMoveEvent(QMouseEvent* event) {
     if (leftBnClicked) {
         newMousePos = event->pos() - curMousePos;
-        newGraphLyrPos.setX(curGraphLyrPos.x() + newMousePos.x() );
-        newGraphLyrPos.setY(curGraphLyrPos.y() + newMousePos.y() );
-        move(newGraphLyrPos);
-        if (curGraphLyrPos.x() > newGraphLyrPos.x())
-            curRArrowXPos = curRArrowXPos + ( abs(newGraphLyrPos.x() - curGraphLyrPos.x()) );
+        newGraphLayerPos.setX(graphLayerPos.x() + newMousePos.x() );
+        newGraphLayerPos.setY(graphLayerPos.y() + newMousePos.y() );
+        move(newGraphLayerPos);
+        if (graphLayerPos.x() > newGraphLayerPos.x())
+            curRArrowXPos = curRArrowXPos + ( abs(newGraphLayerPos.x() - graphLayerPos.x()) );
         else
-            curRArrowXPos = curRArrowXPos - ( abs(newGraphLyrPos.x() - curGraphLyrPos.x()) );
+            curRArrowXPos = curRArrowXPos - ( abs(newGraphLayerPos.x() - graphLayerPos.x()) );
 
-        if (curGraphLyrPos.y() > newGraphLyrPos.y()) {
-            curUpArrowYPos = curUpArrowYPos + ( abs(newGraphLyrPos.y() - curGraphLyrPos.y()) );
+        if (graphLayerPos.y() > newGraphLayerPos.y()) {
+            curUpArrowYPos = curUpArrowYPos + ( abs(newGraphLayerPos.y() - graphLayerPos.y()) );
         } else
-            curUpArrowYPos = curUpArrowYPos - ( abs(newGraphLyrPos.y() - curGraphLyrPos.y()) );
+            curUpArrowYPos = curUpArrowYPos - ( abs(newGraphLayerPos.y() - graphLayerPos.y()) );
         updateAxisNamePositions();
-        curGraphLyrPos = newGraphLyrPos;
-        graphPtr->update();
+        graphLayerPos = newGraphLayerPos;
+        update();
     }
 }
 

@@ -5,32 +5,29 @@
 #include <qpolygon.h>
 #include <qpainter.h>
 #include <qwidget.h>
-
-#include <exprtk.h>
+#include "exprtk.h"
 
 extern const int GRAPH_LAYER_WIDTH;
 extern const int GRAPH_LAYER_HEIGHT;
 extern const int INTERSPACE;
 
 class Function {
-
 private:
     // FUNCTION PROPERTIES
     std::string formula;
-    std::vector<float> domainOfTheFunction;
-    std::vector<float> setOfValues;
-    QPolygon poly;
+    std::vector<float> domain;
+    std::vector<float> values;
+    QPolygon polyline;
     // POINTERS
-    QWidget *graphLayerPtr;
-    QWidget *mainWindowPtr;
+    QWidget* graphLayerPtr;
+    QWidget* mainWindowPtr;
 
     QPen pen;
-    QColor lColor;
+    QColor lineColor;
 
     float firstDomainValue, lastDomainValue;
-    int pWidth;
+    int penWidth;
     int curFirstValuePX, newFirstValuePX;
-    int skok;
     //  PARSER PARAMETERS
     double currentX = 0.0;
     exprtk::symbol_table<double> symbolTable;
@@ -38,7 +35,7 @@ private:
     exprtk::parser<double> parser;
 
 public:
-    Function(QWidget* GraphLayer, std::string MathematicalFormula, float FirstDomainValue, float LastDomainValue,int PenWidth = 3, QColor LineColor = QColor(0,0,0,255));
+    Function(QWidget* graphLayer, const std::string mathematicalFormula, float firstDomainValue, float lastDomainValue,int penWidth = 3, const QColor lineColor = QColor(0,0,0,255));
     ~Function();
     //
     double calcValue(double xVal);
