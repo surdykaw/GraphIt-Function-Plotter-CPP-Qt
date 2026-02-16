@@ -11,6 +11,13 @@ set(CMAKE_AUTOUIC OFF)
 
 include(GNUInstallDirs)
 
+# First make sure you have installed required Qt6 modules (Core, Gui, Widgets).
+# If you are using Qt6 from the installer, check whether the Qt6_DIR environment variable is set
+# Example for Windows (PowerShell):
+# $env:Qt6_DIR="C:\Qt\6.5.0\msvc2019_64\lib\cmake\Qt6"
+# or add the line below before find_package:
+set(Qt6_DIR "D:\\Qt\\6.10.2\\msvc2022_64\\lib\\cmake\\Qt6") # Adjust this path to your Qt6 installation
+
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 
 qt_add_executable(GraphIt)
@@ -44,7 +51,7 @@ target_link_libraries(GraphIt PRIVATE
     Qt6::Widgets
 )
 
-# MSVC fix for large template objects (exprtk)
+# MSVC fix for large template objects (ExprTk)
 if (MSVC)
     target_compile_options(GraphIt PRIVATE /bigobj)
 endif()
