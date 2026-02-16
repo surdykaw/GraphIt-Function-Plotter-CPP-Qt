@@ -12,7 +12,7 @@
 #include <qscrollarea.h>
 #include <qlineedit.h>
 
-class Buttons;
+#include "buttons.h"
 
 class MainWin : public QMainWindow {
     Q_OBJECT
@@ -59,32 +59,5 @@ public:
     //
     void setupMainWin(QMainWindow* mainWindow);
     void setupInputArea(QFrame* frame);
-};
-
-
-class Buttons : public QLabel {
-    Q_OBJECT
-private:
-    MainWin* mainWin;
-    bool state = true; // TRUE MEANS PLUS, FALSE MEANS MINUS
-protected:
-    void enterEvent(QEnterEvent* event) override {
-        Q_UNUSED(event);
-        setCursor(Qt::PointingHandCursor);
-    }
-    void mousePressEvent(QMouseEvent* event) override {
-        Q_UNUSED(event);
-        QMetaObject::invokeMethod(mainWin, "addDelBnClicked", Qt::DirectConnection, Q_ARG(Buttons*, this));
-    }
-
-public:
-    bool changeState() {
-        if (state)
-            state = false;
-        else
-            state = true;
-        return state;
-    }
-    Buttons(MainWin* mainWin, QWidget* parent = nullptr) : QLabel(parent), mainWin(mainWin) {}
 };
 

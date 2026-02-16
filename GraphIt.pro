@@ -11,12 +11,14 @@ INCLUDEPATH += include external
 
 SOURCES += \
     app.cpp \
+    src/buttons.cpp \
     src/function.cpp \
     src/graphlayer.cpp \
     src/mainwin.cpp
 
 HEADERS += \
     external/exprtk.h \
+    include/buttons.h \
     include/function.h \
     include/graphlayer.h \
     include/mainwin.h

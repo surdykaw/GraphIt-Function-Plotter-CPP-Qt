@@ -1,4 +1,5 @@
 #include "mainwin.h"
+#include "buttons.h"
 //
 #include <locale>
 //
