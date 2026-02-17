@@ -1,5 +1,4 @@
 # GraphIt - Interactive Function Plotter
-
 ## Project Overview
 GraphIt is a lightweight desktop graph plotting application written in **C++ using the Qt framework**.  
 It allows interactive visualization of mathematical functions and smooth navigation across the coordinate system by dragging the view.
@@ -7,6 +6,12 @@ It allows interactive visualization of mathematical functions and smooth navigat
 The application focuses on responsiveness and deterministic rendering. Function values are precomputed once and then efficiently rendered, which allows smooth panning even with multiple plots.
 
 > 📖 Detailed technical description: [**docs/architecture.md**](docs/architecture.md)
+
+---
+## Demo
+**Example of how to use the application**
+
+![Demo](docs/demo.gif)
 
 ---
 ## Key Features
@@ -20,11 +25,12 @@ The application focuses on responsiveness and deterministic rendering. Function 
 
 ---
 ## Example screenshots
+**Main window after startup**   
 
-**Main window after startup**  
 ![Main window](docs/after_startup.png)
 
 **Multiple functions example**  
+
 ![Multiple functions](docs/many_functions_plot.png)
 
 ---
@@ -37,7 +43,6 @@ The application focuses on responsiveness and deterministic rendering. Function 
 ---
 
 ## Installation
-
 ### 1. Using Qt Creator (recommended)
 
 1. Install Qt Creator with Qt 6 Widgets module
@@ -46,19 +51,16 @@ The application focuses on responsiveness and deterministic rendering. Function 
 4. Build & Run
 
 ---
-
 ### 2. Using CMake (MSVC / CLion / other IDEs)
 
 *(Instructions will be added — project already supports CMake configuration)*
 
 ---
-
 ### 3. Pure CMake build (Windows / Linux)
 
 *(Planned — cross‑platform instructions will be provided later)*
 
 ---
-
 ## Usage
 
 1. Launch the application — an empty coordinate system appears
@@ -69,7 +71,6 @@ The application focuses on responsiveness and deterministic rendering. Function 
 6. Drag inside the window to navigate the coordinate system
 
 ---
-
 ## Current Limitations
 * No zoom yet (fixed scale)
 * The renderer does not currently split plots at asymptotes or undefined points, so functions with discontinuities (e.g. `1/x`, `tan(x)`) can be plotted incorrectly
